@@ -1,7 +1,6 @@
 import { toPng } from "html-to-image";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { layoutC_example } from "@/svgTemplatesString/layoutC_example";
 import { layoutC_Christmas2 } from "@/svgTemplatesString/layoutC_Christmas2";
 import { layoutC_Christmas4 } from "@/svgTemplatesString/layoutC_Christmas4";
 import { layoutC_Halloween1 } from "@/svgTemplatesString/layoutC_Halloween1";
@@ -16,6 +15,16 @@ import {
   CLOUDINARY_UPLOAD_PRESET_SVG,
 } from "@/config/env";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { layoutC_Assorted1 } from "@/svgTemplatesString/layoutC_Assorted1";
+import { layoutC_Assorted2 } from "@/svgTemplatesString/layoutC_Assorted2";
+import { layoutC_Assorted3 } from "@/svgTemplatesString/layoutC_Assorted3";
+import { layoutC_Assorted4 } from "@/svgTemplatesString/layoutC_Assorted4";
+import { layoutC_Assorted5 } from "@/svgTemplatesString/layoutC_Assorted5";
+import { layoutC_Assorted6 } from "@/svgTemplatesString/layoutC_Assorted6";
+import { layoutC_Assorted7 } from "@/svgTemplatesString/layoutC_Assorted7";
+import { layoutC_Assorted8 } from "@/svgTemplatesString/layoutC_Assorted8";
+import { layoutC_Assorted9 } from "@/svgTemplatesString/layoutC_Assorted9";
+import { layoutC_Assorted10 } from "@/svgTemplatesString/layoutC_Assorted10";
 
 declare global {
   interface Window {
@@ -28,11 +37,19 @@ declare global {
 
 const layouts: Record<string, Record<string, string>> = {
   Classic: {
-    LayoutC_example: layoutC_example,
-    LayoutC_Christmas2: layoutC_Christmas2,
-    // LayoutE_Assort: layoutEAssort,
+    LayoutC_Assorted1: layoutC_Assorted1,
+    LayoutC_Assorted2: layoutC_Assorted2,
+    LayoutC_Assorted3: layoutC_Assorted3,
+    LayoutC_Assorted4: layoutC_Assorted4,
+    LayoutC_Assorted5: layoutC_Assorted5,
+    LayoutC_Assorted6: layoutC_Assorted6,
+    LayoutC_Assorted7: layoutC_Assorted7,
+    LayoutC_Assorted8: layoutC_Assorted8,
+    LayoutC_Assorted9: layoutC_Assorted9,
+    LayoutC_Assorted10: layoutC_Assorted10,
   },
   Seasonal: {
+    LayoutC_Christmas2: layoutC_Christmas2,
     LayoutC_Christmas4: layoutC_Christmas4,
     LayoutC_Halloween1: layoutC_Halloween1,
     LayoutC_Halloween2: layoutC_Halloween2,

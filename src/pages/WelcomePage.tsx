@@ -16,7 +16,7 @@ const WelcomePage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-yellow-50 flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-yellow-300 text-yellow-50 flex flex-col items-center justify-center px-6">
       <div className="absolute top-4 left-6 flex items-center gap-2">
         <div className="h-6 w-6 rounded-md bg-yellow-500 flex items-center justify-center text-black font-bold">
           P

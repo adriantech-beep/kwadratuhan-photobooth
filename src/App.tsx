@@ -4,8 +4,8 @@ import QRPage from "./pages/QRPage";
 import PayPage from "./pages/PayPage";
 import ChooseControlPage from "./pages/ChooseControlPage";
 import CameraCapture from "./presentational/CameraCapture";
-import TemplatePicker from "./test/TemplatePicker-1";
 import ChooseTemplatePage from "./pages/ChooseTemplatePage";
+import TemplatePicker from "./test/TemplatePicker";
 
 function App() {
   return (
