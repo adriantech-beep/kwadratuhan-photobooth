@@ -2,40 +2,52 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
-import { usePhotoStore } from "@/store/usePhotoStore";
 
-const SelectorImage = () => {
-  const { photoBlobs, setSelectedPhotoBlobs, setSelectionConfirmed } =
-    usePhotoStore();
+interface ImageSelectorProps {
+  photoBlobs: Blob[];
+  onSelectImages: (selectedBlobs: Blob[]) => void;
+}
 
+const SelectorImage = ({ photoBlobs, onSelectImages }: ImageSelectorProps) => {
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [imageMetadata, setImageMetadata] = useState<
     Array<{ size: string; type: string; index: number }>
   >([]);
 
   useEffect(() => {
-    const metadata = photoBlobs.map((blob, index) => ({
-      size: (blob.size / 1024).toFixed(2),
-      type: blob.type,
-      index,
-    }));
+    const metadata = photoBlobs.map((blob, index) => {
+      const sizeInKB = (blob.size / 1024).toFixed(2);
+      console.log(
+        `[v0] Image ${index + 1} - Type: ${blob.type}, Size: ${sizeInKB} KB`
+      );
+      return {
+        size: sizeInKB,
+        type: blob.type,
+        index,
+      };
+    });
     setImageMetadata(metadata);
   }, [photoBlobs]);
 
   const toggleImageSelection = (index: number) => {
-    setSelectedIndices((prev) =>
-      prev.includes(index)
-        ? prev.filter((i) => i !== index)
-        : prev.length < 4
-        ? [...prev, index]
-        : prev
-    );
+    setSelectedIndices((prev) => {
+      if (prev.includes(index)) {
+        return prev.filter((i) => i !== index);
+      } else if (prev.length < 4) {
+        return [...prev, index];
+      }
+      return prev;
+    });
   };
 
   const handleConfirm = () => {
     const selectedBlobs = selectedIndices.map((i) => photoBlobs[i]);
-    setSelectedPhotoBlobs(selectedBlobs);
-    setSelectionConfirmed(true);
+    console.log(
+      `[v0] Selected 4 images with total size: ${(
+        selectedBlobs.reduce((sum, b) => sum + b.size, 0) / 1024
+      ).toFixed(2)} KB`
+    );
+    onSelectImages(selectedBlobs);
   };
 
   return (
@@ -60,7 +72,7 @@ const SelectorImage = () => {
               whileHover={{ scale: 1.05 }}
             >
               <img
-                src={URL.createObjectURL(blob)}
+                src={URL.createObjectURL(blob) || "/placeholder.svg"}
                 alt={`photo-${index + 1}`}
                 className={`w-full h-auto rounded-lg border-2 object-cover transition-all ${
                   isSelected
@@ -79,6 +91,7 @@ const SelectorImage = () => {
                 </motion.div>
               )}
 
+              {/* Image metadata tooltip */}
               {metadata && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-yellow-300 text-xs p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
                   <p>{metadata.type}</p>

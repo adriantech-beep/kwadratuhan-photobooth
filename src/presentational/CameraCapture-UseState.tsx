@@ -1,4 +1,6 @@
-import { useRef, useEffect } from "react";
+"use client";
+
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Camera,
@@ -13,12 +15,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import SelectorImage from "./SelectorImage";
 import UploadImage from "./UploadImage";
 import LoadingThreeDotsJumping from "@/components/LoadingThreeDotsJumping";
-import { usePhotoStore } from "@/store/usePhotoStore";
-import { useCameraStore } from "@/store/useCameraStore";
-import { capturePhoto } from "@/utils/capturePhoto";
-import { startCamera } from "@/utils/startCamera";
 
-const CameraCapture = () => {
+const CameraCaptureUseState = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const photoRef = useRef<HTMLCanvasElement>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -26,38 +24,110 @@ const CameraCapture = () => {
   const timeoutIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const isSessionActiveRef = useRef(false);
 
+  const [isVideoOn, setIsVideoOn] = useState(false);
+  const [photoBlobs, setPhotoBlobs] = useState<Blob[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSelectingImages, setIsSelectingImages] = useState(false);
+  const [selectedPhotoBlobs, setSelectedPhotoBlobs] = useState<Blob[]>([]);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  console.log(
+    "Selected photo blobs length from CameraCapture:",
+    selectedPhotoBlobs.length
+  );
+
+  const [isCountdown, setIsCountdown] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [timer, setTimer] = useState<number>(3);
+  const [showTimerOptions, setShowTimerOptions] = useState(false);
+
+  const [rotation, setRotation] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const maxShots = 10;
   const delayBetweenShots = 1500;
 
-  const { photoBlobs, clearPhotos, photoPreviews, selectionConfirmed } =
-    usePhotoStore();
+  // const startCamera = async () => {
+  //   if (isPreviewMode) return; // prevent reopening preview
 
-  const {
-    isVideoOn,
-    setIsVideoOn,
-    isEditing,
-    setIsEditing,
-    isSelectingImages,
-    setIsSelectingImages,
-    isPreviewMode,
-    setIsPreviewMode,
-    isCountdown,
-    setIsCountdown,
-    countdown,
-    setCountdown,
-    timer,
-    setTimer,
-    showTimerOptions,
-    setShowTimerOptions,
-    rotation,
-    setRotation,
-    isFlipped,
-    setIsFlipped,
-    isCapturing,
-    setIsCapturing,
-    isProcessing,
-    setIsProcessing,
-  } = useCameraStore();
+  //   try {
+  //     console.log("🎥 Starting Canon live preview...");
+  //     const initialStream = await navigator.mediaDevices.getUserMedia({
+  //       video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+  //     });
+
+  //     const devices = await navigator.mediaDevices.enumerateDevices();
+  //     const videoDevices = devices.filter((d) => d.kind === "videoinput");
+
+  //     const canonDevice =
+  //       videoDevices.find((device) =>
+  //         device.label.toLowerCase().includes("eos webcam utility pro")
+  //       ) ||
+  //       videoDevices.find((device) =>
+  //         device.label.toLowerCase().includes("eos webcam utility")
+  //       );
+
+  //     if (!canonDevice) {
+  //       console.warn("⚠️ No Canon camera found");
+  //       return;
+  //     }
+
+  //     initialStream.getTracks().forEach((t) => t.stop());
+
+  //     const stream = await navigator.mediaDevices.getUserMedia({
+  //       video: {
+  //         deviceId: { exact: canonDevice.deviceId },
+  //         width: { ideal: 1280 },
+  //         height: { ideal: 720 },
+  //         aspectRatio: 16 / 9,
+  //       },
+  //     });
+
+  //     if (videoRef.current) {
+  //       videoRef.current.srcObject = stream;
+  //       videoRef.current.onloadedmetadata = () => videoRef.current?.play();
+  //     }
+
+  //     // ✅ Preview mode ON
+  //     setIsPreviewMode(true);
+  //     setIsVideoOn(false); // not capturing yet
+  //     setPhotoBlobs([]);
+  //     setPhotoPreviews([]);
+
+  //     console.log("✅ Canon preview ready:", canonDevice.label);
+  //   } catch (error) {
+  //     console.error("❌ Camera access failed:", error);
+  //   }
+  // };
+
+  const startCamera = async () => {
+    if (isPreviewMode) return; // prevent re-opening preview
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          aspectRatio: 16 / 9,
+        },
+      });
+
+      if (videoRef.current) videoRef.current.srcObject = stream;
+
+      setIsPreviewMode(true); // preview is active
+      setIsVideoOn(false); // not capturing yet
+      setPhotoBlobs([]);
+      setPhotoPreviews([]);
+
+      console.log("📷 Live preview started");
+    } catch (error) {
+      console.error("Camera access denied or error:", error);
+    }
+  };
 
   const clearAllTimeouts = () => {
     timeoutIdsRef.current.forEach((id) => clearTimeout(id));
@@ -112,13 +182,65 @@ const CameraCapture = () => {
     }, 1000);
   };
 
+  /** CAPTURE **/
+  const capturePhoto = async (): Promise<Blob | null> => {
+    if (isCapturing) return null;
+    setIsCapturing(true);
+
+    const video = videoRef.current;
+    const canvas = photoRef.current;
+    if (!video || !canvas) {
+      setIsCapturing(false);
+      return null;
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      setIsCapturing(false);
+      return null;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.scale(isFlipped ? -1 : 1, 1);
+    ctx.drawImage(
+      video,
+      -canvas.width / 2,
+      -canvas.height / 2,
+      canvas.width,
+      canvas.height
+    );
+    ctx.restore();
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const previewUrl = URL.createObjectURL(blob);
+          setPhotoBlobs((prev) => [...prev, blob]);
+          setPhotoPreviews((prev) => [...prev, previewUrl]);
+          setIsCapturing(false);
+          resolve(blob);
+        } else {
+          setIsCapturing(false);
+          resolve(null);
+        }
+      }, "image/png");
+    });
+  };
+
+  /** BOOTH SESSION **/
   const startBoothSession = async () => {
     if (isCapturing) return;
 
     if (!isPreviewMode) {
-      await startCamera(videoRef);
+      console.log("⚙️ No preview active — starting camera first...");
+      await startCamera();
     }
 
+    console.log("🚀 Starting booth capture session...");
     isSessionActiveRef.current = true;
     setIsVideoOn(true);
     setIsPreviewMode(false);
@@ -135,7 +257,7 @@ const CameraCapture = () => {
       }
 
       startCountdown(timer, async () => {
-        await capturePhoto(videoRef, photoRef);
+        await capturePhoto();
         shot++;
 
         if (shot < maxShots) {
@@ -152,7 +274,8 @@ const CameraCapture = () => {
 
   const handleRetake = async () => {
     stopCamera();
-    clearPhotos();
+    setPhotoBlobs([]);
+    setPhotoPreviews([]);
     setIsEditing(false);
     const timeoutId = setTimeout(() => startBoothSession(), 100);
     timeoutIdsRef.current.push(timeoutId);
@@ -167,10 +290,17 @@ const CameraCapture = () => {
     timeoutIdsRef.current.push(timeoutId);
   };
 
+  const handleImagesSelected = (selectedBlobs: Blob[]) => {
+    setSelectedPhotoBlobs(selectedBlobs);
+    setIsSelectingImages(false);
+    setIsEditing(true);
+  };
+
   useEffect(() => {
     const autoStartPreview = async () => {
       if (!isPreviewMode) {
-        await startCamera(videoRef);
+        console.log("🎥 Auto-starting live preview...");
+        await startCamera();
       }
     };
 
@@ -181,20 +311,6 @@ const CameraCapture = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // 🧩 Add this after your other useEffects
-  useEffect(() => {
-    if (isSelectingImages && photoBlobs.length > 0 && selectionConfirmed) {
-      setIsSelectingImages(false);
-      setIsEditing(true);
-    }
-  }, [
-    isSelectingImages,
-    photoBlobs.length,
-    selectionConfirmed,
-    setIsSelectingImages,
-    setIsEditing,
-  ]);
 
   if (isProcessing) {
     return (
@@ -209,11 +325,16 @@ const CameraCapture = () => {
   }
 
   if (isSelectingImages && photoBlobs.length > 0) {
-    return <SelectorImage />;
+    return (
+      <SelectorImage
+        photoBlobs={photoBlobs}
+        onSelectImages={handleImagesSelected}
+      />
+    );
   }
 
-  if (isEditing && photoBlobs.length > 0) {
-    return <UploadImage autoStartUpload />;
+  if (isEditing && selectedPhotoBlobs.length > 0) {
+    return <UploadImage photoBlobs={selectedPhotoBlobs} autoStartUpload />;
   }
 
   return (
@@ -275,18 +396,29 @@ const CameraCapture = () => {
 
       <div className="flex flex-col justify-center gap-3 md:gap-4 mt-4">
         {isPreviewMode && !isVideoOn && photoBlobs.length === 0 && (
+          <Button
+            onClick={() => startBoothSession()}
+            variant="outline"
+            className="rounded-full border-4 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black w-24 h-24 md:w-32 md:h-32 flex flex-col items-center justify-center text-base md:text-lg font-semibold transition-all duration-300 bg-transparent"
+          >
+            <Camera size={16} className="md:size-20" />
+            Start Capture
+          </Button>
+        )}
+
+        {isVideoOn && !isPreviewMode && (
           <>
             <Button
-              onClick={() => startBoothSession()}
-              variant="outline"
-              className="rounded-full border-4 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black w-24 h-24 md:w-32 md:h-32 flex flex-col items-center justify-center text-base md:text-lg font-semibold transition-all duration-300 bg-transparent"
+              onClick={stopCamera}
+              className="rounded-full border-4 border-red-500 bg-red-500 text-white hover:bg-red-600 hover:border-red-600 w-20 h-20 md:w-24 md:h-24 flex flex-col items-center justify-center gap-1 text-sm md:text-lg font-semibold"
             >
-              <Camera size={16} className="md:size-20" />
-              Start Capture
+              <Video size={28} />
+              Stop
             </Button>
+
             <div className="relative">
               <Button
-                onClick={() => setShowTimerOptions(!showTimerOptions)}
+                onClick={() => setShowTimerOptions((p) => !p)}
                 variant="outline"
                 disabled={isCapturing}
                 className="rounded-full border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black text-sm md:text-lg px-4 py-2 flex items-center gap-2"
@@ -317,7 +449,7 @@ const CameraCapture = () => {
             </div>
 
             <Button
-              onClick={() => setRotation((rotation + 90) % 360)}
+              onClick={() => setRotation((r) => (r + 90) % 360)}
               variant="outline"
               disabled={isCapturing}
               className="rounded-full border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black text-sm md:text-lg px-4 py-2 flex items-center gap-2"
@@ -326,7 +458,7 @@ const CameraCapture = () => {
             </Button>
 
             <Button
-              onClick={() => setIsFlipped(!isFlipped)}
+              onClick={() => setIsFlipped((f) => !f)}
               variant="outline"
               disabled={isCapturing}
               className="rounded-full border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black text-sm md:text-lg px-4 py-2 flex items-center gap-2"
@@ -336,22 +468,9 @@ const CameraCapture = () => {
           </>
         )}
 
-        {isVideoOn && !isPreviewMode && photoBlobs.length >= 1 && (
-          <>
-            <Button
-              onClick={stopCamera}
-              className="rounded-full border-4 border-red-500 bg-red-500 text-white hover:bg-red-600 hover:border-red-600 w-20 h-20 md:w-24 md:h-24 flex flex-col items-center justify-center gap-1 text-sm md:text-lg font-semibold"
-            >
-              <Video size={28} />
-              Stop
-            </Button>
-          </>
-        )}
-
         {!isVideoOn && photoBlobs.length > 0 && (
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
             <Button
-              disabled={photoBlobs.length < 4}
               onClick={handleEditPhotos}
               className="rounded-full bg-yellow-400 text-black font-semibold px-8 py-3 text-base md:text-lg shadow-md hover:bg-yellow-500 hover:shadow-lg focus:ring-2 focus:ring-yellow-300 transition-all duration-200"
             >
@@ -372,4 +491,4 @@ const CameraCapture = () => {
   );
 };
 
-export default CameraCapture;
+export default CameraCaptureUseState;

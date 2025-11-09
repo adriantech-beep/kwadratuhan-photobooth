@@ -6,7 +6,6 @@ import { layoutC_Christmas4 } from "@/svgTemplatesString/layoutC_Christmas4";
 import { layoutC_Halloween1 } from "@/svgTemplatesString/layoutC_Halloween1";
 import { layoutC_Halloween2 } from "@/svgTemplatesString/layoutC_Halloween2";
 import TemplateCard from "./TemplateCard";
-import { usePhotoStore } from "@/store/photoStore";
 import { uploadSvgToCloudinary } from "@/utils/uploadSvgToCloudinary";
 import { dataUrlToFile } from "@/utils/dataUrlToFile";
 import { blobToBase64 } from "@/utils/blobToBase64";
@@ -25,6 +24,7 @@ import { layoutC_Assorted7 } from "@/svgTemplatesString/layoutC_Assorted7";
 import { layoutC_Assorted8 } from "@/svgTemplatesString/layoutC_Assorted8";
 import { layoutC_Assorted9 } from "@/svgTemplatesString/layoutC_Assorted9";
 import { layoutC_Assorted10 } from "@/svgTemplatesString/layoutC_Assorted10";
+import { usePhotoStore } from "@/store/usePhotoStore";
 
 declare global {
   interface Window {
@@ -63,7 +63,8 @@ export default function TemplatePicker() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { state } = useLocation();
-  const blobs = usePhotoStore((s) => s.blobs);
+  const photoBlobs = usePhotoStore((s) => s.photoBlobs);
+
   const layout: string = state?.layout || "";
 
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ export default function TemplatePicker() {
       if (!targetElement) return;
 
       let svgString = svg;
-      const base64Images = await Promise.all(blobs.map(blobToBase64));
+      const base64Images = await Promise.all(photoBlobs.map(blobToBase64));
 
       base64Images.forEach((base64, index) => {
         svgString = svgString.replace(
@@ -92,7 +93,7 @@ export default function TemplatePicker() {
       targetElement.innerHTML = svgString;
     };
     run();
-  }, [selectedLayout, selectedCategory, layout, blobs]);
+  }, [selectedLayout, selectedCategory, layout, photoBlobs]);
 
   const handleUploadAsPng = async () => {
     if (!selectedLayout) return;

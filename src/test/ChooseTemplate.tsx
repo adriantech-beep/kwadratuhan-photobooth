@@ -1,11 +1,11 @@
 import QRDownloadImages from "@/components/QRDownloadImages";
-import { usePhotoStore } from "@/store/photoStore";
+import { usePhotoStore } from "@/store/usePhotoStore";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const ChooseTemplate = () => {
   const { state } = useLocation();
-  const blobs = usePhotoStore((s) => s.blobs);
+  const photoBlobs = usePhotoStore((s) => s.photoBlobs);
   const layout: string = state?.layout || "";
   const navigate = useNavigate();
   useEffect(() => {
@@ -14,14 +14,14 @@ const ChooseTemplate = () => {
 
     targetElement.innerHTML = layout;
 
-    blobs.forEach((blob, index) => {
+    photoBlobs.forEach((blob, index) => {
       const objectURL = URL.createObjectURL(blob);
       const imageTag = document.getElementById(`photo-${index + 1}`);
       if (imageTag) {
         imageTag.setAttribute("href", objectURL);
       }
     });
-  }, [blobs, layout]);
+  }, [photoBlobs, layout]);
 
   if (!layout) {
     return (
