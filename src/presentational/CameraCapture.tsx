@@ -182,7 +182,6 @@ const CameraCapture = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 🧩 Add this after your other useEffects
   useEffect(() => {
     if (isSelectingImages && photoBlobs.length > 0 && selectionConfirmed) {
       setIsSelectingImages(false);
