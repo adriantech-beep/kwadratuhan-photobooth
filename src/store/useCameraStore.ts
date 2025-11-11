@@ -40,7 +40,7 @@ export const useCameraStore = create<CameraState>((set) => ({
   timer: 3,
   showTimerOptions: false,
   rotation: 0,
-  isFlipped: false,
+  isFlipped: true,
   isCapturing: false,
   isProcessing: false,
 
@@ -68,7 +68,7 @@ export const useCameraStore = create<CameraState>((set) => ({
       timer: 3,
       showTimerOptions: false,
       rotation: 0,
-      isFlipped: false,
+      isFlipped: true,
       isCapturing: false,
       isProcessing: false,
     }),

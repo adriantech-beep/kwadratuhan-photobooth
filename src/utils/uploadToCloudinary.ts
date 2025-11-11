@@ -6,7 +6,7 @@ export async function uploadToCloudinary(blob: Blob): Promise<string> {
 
   if (!cloudName) {
     console.error("❌ Missing VITE_CLOUDINARY_CLOUD_NAME in .env");
-    return URL.createObjectURL(blob); // fallback so you can continue flow
+    return URL.createObjectURL(blob);
   }
 
   try {
@@ -25,7 +25,6 @@ export async function uploadToCloudinary(blob: Blob): Promise<string> {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("❌ Cloudinary error details:", errorData);
-      // fallback to blob so app continues
       return URL.createObjectURL(blob);
     }
 
@@ -34,6 +33,6 @@ export async function uploadToCloudinary(blob: Blob): Promise<string> {
     return data.secure_url;
   } catch (error) {
     console.error("❌ Cloudinary upload error:", error);
-    return URL.createObjectURL(blob); // fallback so you can still navigate
+    return URL.createObjectURL(blob);
   }
 }
