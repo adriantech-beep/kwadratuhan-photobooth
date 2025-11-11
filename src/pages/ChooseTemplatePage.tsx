@@ -1,4 +1,4 @@
-import ChooseTemplate from "@/test/ChooseTemplate";
+import ChooseTemplate from "@/test/FinalTemplate";
 
 const ChooseTemplatePage = () => {
   return (

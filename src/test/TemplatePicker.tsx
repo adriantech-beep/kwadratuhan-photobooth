@@ -6,13 +6,9 @@ import { layoutC_Christmas4 } from "@/svgTemplatesString/layoutC_Christmas4";
 import { layoutC_Halloween1 } from "@/svgTemplatesString/layoutC_Halloween1";
 import { layoutC_Halloween2 } from "@/svgTemplatesString/layoutC_Halloween2";
 import TemplateCard from "./TemplateCard";
-import { uploadSvgToCloudinary } from "@/utils/uploadSvgToCloudinary";
 import { dataUrlToFile } from "@/utils/dataUrlToFile";
 import { blobToBase64 } from "@/utils/blobToBase64";
-import {
-  CLOUDINARY_CLOUD_NAME,
-  CLOUDINARY_UPLOAD_PRESET_SVG,
-} from "@/config/env";
+
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { layoutC_Assorted1 } from "@/svgTemplatesString/layoutC_Assorted1";
 import { layoutC_Assorted2 } from "@/svgTemplatesString/layoutC_Assorted2";
@@ -25,6 +21,7 @@ import { layoutC_Assorted8 } from "@/svgTemplatesString/layoutC_Assorted8";
 import { layoutC_Assorted9 } from "@/svgTemplatesString/layoutC_Assorted9";
 import { layoutC_Assorted10 } from "@/svgTemplatesString/layoutC_Assorted10";
 import { usePhotoStore } from "@/store/usePhotoStore";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 
 declare global {
   interface Window {
@@ -63,7 +60,7 @@ export default function TemplatePicker() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { state } = useLocation();
-  const photoBlobs = usePhotoStore((s) => s.photoBlobs);
+  const { photoBlobs } = usePhotoStore();
 
   const layout: string = state?.layout || "";
 
@@ -75,22 +72,34 @@ export default function TemplatePicker() {
         ? layouts[selectedCategory][selectedLayout]
         : layout;
 
-      if (!svg) return;
+      if (!svg || !selectedLayout) return;
 
-      const targetElement = document.getElementById("myDiv");
-      if (!targetElement) return;
+      const targetElement1 = document.getElementById("myDiv1");
+      const targetElement2 = document.getElementById("myDiv2");
+      if (!targetElement1 || !targetElement2) return;
 
-      let svgString = svg;
       const base64Images = await Promise.all(photoBlobs.map(blobToBase64));
 
-      base64Images.forEach((base64, index) => {
-        svgString = svgString.replace(
+      const firstHalf = base64Images.slice(0, 4);
+      const secondHalf = base64Images.slice(4, 8);
+
+      let svgString1 = layouts[selectedCategory][selectedLayout];
+      firstHalf.forEach((base64, index) => {
+        svgString1 = svgString1.replace(
           new RegExp(`(<image[^>]*id="photo-${index + 1}"[^>]*)/>`, "i"),
           `$1 xlink:href="${base64}" />`
         );
       });
+      targetElement1.innerHTML = svgString1;
 
-      targetElement.innerHTML = svgString;
+      let svgString2 = layouts[selectedCategory][selectedLayout];
+      secondHalf.forEach((base64, index) => {
+        svgString2 = svgString2.replace(
+          new RegExp(`(<image[^>]*id="photo-${index + 1}"[^>]*)/>`, "i"),
+          `$1 xlink:href="${base64}" />`
+        );
+      });
+      targetElement2.innerHTML = svgString2;
     };
     run();
   }, [selectedLayout, selectedCategory, layout, photoBlobs]);
@@ -99,95 +108,84 @@ export default function TemplatePicker() {
     if (!selectedLayout) return;
 
     setIsLoading(true);
-    const targetElement = document.getElementById("myDiv");
-    if (!targetElement) return;
+
+    const target1 = document.getElementById("myDiv1");
+    const target2 = document.getElementById("myDiv2");
+    if (!target1 || !target2) return;
 
     try {
-      // Step 1: Capture single 2×6 layout as PNG
-      const singleStrip = await toPng(targetElement, {
-        cacheBust: true,
-        pixelRatio: 3,
-      });
+      const [strip1, strip2] = await Promise.all([
+        toPng(target1, { cacheBust: true, pixelRatio: 3 }),
+        toPng(target2, { cacheBust: true, pixelRatio: 3 }),
+      ]);
 
-      // Step 2: Load it for composition
-      const img = new Image();
-      img.src = singleStrip;
-      await new Promise((resolve) => (img.onload = resolve));
+      const img1 = new Image();
+      const img2 = new Image();
+      img1.src = strip1;
+      img2.src = strip2;
 
-      // === CONFIG ===
-      //   const DPI = 300;
-      const STRIP_WIDTH_PX = 600; // 2 inches * 300 dpi
-      const STRIP_HEIGHT_PX = 1800; // 6 inches * 300 dpi
-      const GAP_PX = 2; //  gap between strips
+      await Promise.all([
+        new Promise((resolve) => (img1.onload = resolve)),
+        new Promise((resolve) => (img2.onload = resolve)),
+      ]);
 
-      // Step 3: Create true 4×6 canvas (portrait for correct layout)
+      const STRIP_WIDTH_PX = 600;
+      const STRIP_HEIGHT_PX = 1800;
+      const GAP_PX = 2;
+
       const canvas = document.createElement("canvas");
-      canvas.width = 1800; // 6 inches * 300 dpi (tall)
-      canvas.height = 1200; // 4 inches * 300 dpi (wide)
-      const ctx = canvas.getContext("2d")!;
+      canvas.width = 1200 + GAP_PX;
+      canvas.height = 1800;
 
-      // White background
+      const ctx = canvas.getContext("2d")!;
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Step 4: Rotate for proper portrait orientation
-      ctx.save();
-      ctx.translate(0, canvas.height);
-      ctx.rotate(-Math.PI / 2); // rotate clockwise to portrait
-
-      // Step 5: Draw two vertical 2×6 strips side-by-side
-      ctx.drawImage(img, 0, 0, STRIP_WIDTH_PX, STRIP_HEIGHT_PX);
+      ctx.drawImage(img1, 0, 0, STRIP_WIDTH_PX, STRIP_HEIGHT_PX);
       ctx.drawImage(
-        img,
+        img2,
         STRIP_WIDTH_PX + GAP_PX,
         0,
         STRIP_WIDTH_PX,
         STRIP_HEIGHT_PX
       );
-      ctx.restore();
 
-      // Step 6: Export the 4×6 composite
       const finalDataUrl = canvas.toDataURL("image/png");
 
-      const finalFile = dataUrlToFile(finalDataUrl, "final-4x6.png");
-      const result = await uploadSvgToCloudinary(
-        finalFile,
-        CLOUDINARY_CLOUD_NAME,
-        CLOUDINARY_UPLOAD_PRESET_SVG
-      );
-      console.log("✅ Final 4×6 PNG uploaded:", result.secure_url);
+      const finalFile = dataUrlToFile(finalDataUrl, "final-8photo-4x6.png");
+      const imageUrl = await uploadToCloudinary(finalFile);
 
       if (window.electronAPI?.printFinalImage) {
         window.electronAPI.printFinalImage(finalDataUrl);
-        console.log(
-          "🖨️ Sent rotated 4×6 composite to Electron print handler (silent)"
-        );
+        console.log("🖨️ Sent 8-photo composite to Electron print handler");
       } else {
         console.warn("⚠️ Electron API not available (web mode)");
       }
 
-      navigate("/choosing-template", {
+      navigate("/finaltemplate", {
         state: {
           layout: layouts[selectedCategory][selectedLayout!],
+          finalImageUrl: imageUrl,
         },
       });
-      setIsLoading(false);
     } catch (err) {
       console.error("❌ PNG upload or print failed:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-black">
-      <div className="w-full max-w-5xl bg-gray-100 rounded-2xl shadow-xl p-6 flex flex-col gap-6">
+    <div className="h-full flex flex-col items-center justify-center">
+      <div className="w-full bg-gray-100 rounded-2xl shadow-xl p-6 flex flex-col gap-6">
         <div className="flex justify-between items-center border-b pb-4">
           <h1 className="text-2xl font-bold text-gray-800">
             Pick Your Template
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="col-span-1">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="col-span-2">
             <div className="flex flex-col gap-3 mb-4">
               {Object.keys(layouts).map((cat) => (
                 <button
@@ -207,7 +205,7 @@ export default function TemplatePicker() {
               ))}
             </div>
 
-            <div className="h-[400px] overflow-y-auto pr-2 space-y-3">
+            <div className="h-[400px] overflow-auto pr-2 space-y-3 grid grid-cols-3">
               {Object.entries(layouts[selectedCategory]).map(([key, svg]) => (
                 <TemplateCard
                   key={key}
@@ -220,12 +218,16 @@ export default function TemplatePicker() {
             </div>
           </div>
 
-          <div className="col-span-2 flex items-center justify-center rounded-lg border">
+          <div className="col-span-2 flex items-center justify-center border">
             {selectedLayout ? (
-              <div className="flex items-center justify-center shadow-inner p-4">
+              <div className=" flex items-center justify-center shadow-inner">
                 <div
-                  id="myDiv"
-                  className="w-full max-w-sm aspect-2/3 flex items-center justify-center"
+                  id="myDiv1"
+                  className="w-full  max-w-sm  flex items-center justify-center bg-white shadow-inner"
+                />
+                <div
+                  id="myDiv2"
+                  className="w-full max-w-sm  flex items-center justify-center bg-white  shadow-inner"
                 />
               </div>
             ) : (
@@ -234,7 +236,7 @@ export default function TemplatePicker() {
           </div>
         </div>
 
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end">
           <button
             disabled={!selectedLayout}
             className={`px-6 py-3 rounded-lg font-semibold transition-colors ${

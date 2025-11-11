@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
-import { motion } from "framer-motion";
+import { Check, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePhotoStore } from "@/store/usePhotoStore";
 
 const SelectorImage = () => {
@@ -9,24 +9,13 @@ const SelectorImage = () => {
     usePhotoStore();
 
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-  const [imageMetadata, setImageMetadata] = useState<
-    Array<{ size: string; type: string; index: number }>
-  >([]);
-
-  useEffect(() => {
-    const metadata = photoBlobs.map((blob, index) => ({
-      size: (blob.size / 1024).toFixed(2),
-      type: blob.type,
-      index,
-    }));
-    setImageMetadata(metadata);
-  }, [photoBlobs]);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   const toggleImageSelection = (index: number) => {
     setSelectedIndices((prev) =>
       prev.includes(index)
         ? prev.filter((i) => i !== index)
-        : prev.length < 4
+        : prev.length < 8
         ? [...prev, index]
         : prev
     );
@@ -42,21 +31,20 @@ const SelectorImage = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 gap-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-yellow-400 mb-2">
-          Select 4 Images
+          Select 8 Images
         </h1>
-        <p className="text-yellow-300">{selectedIndices.length}/4 selected</p>
+        <p className="text-yellow-300">{selectedIndices.length}/8 selected</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-6xl">
         {photoBlobs.map((blob, index) => {
           const isSelected = selectedIndices.includes(index);
-          const metadata = imageMetadata.find((m) => m.index === index);
 
           return (
             <motion.div
               key={index}
               className="relative cursor-pointer group"
-              onClick={() => toggleImageSelection(index)}
+              onClick={() => setPreviewIndex(index)}
               whileHover={{ scale: 1.05 }}
             >
               <img
@@ -78,13 +66,6 @@ const SelectorImage = () => {
                   <Check size={40} className="text-yellow-400" />
                 </motion.div>
               )}
-
-              {metadata && (
-                <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-yellow-300 text-xs p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p>{metadata.type}</p>
-                  <p>{metadata.size} KB</p>
-                </div>
-              )}
             </motion.div>
           );
         })}
@@ -92,11 +73,57 @@ const SelectorImage = () => {
 
       <Button
         onClick={handleConfirm}
-        disabled={selectedIndices.length !== 4}
+        disabled={selectedIndices.length !== 8}
         className="rounded-full bg-yellow-400 text-black hover:bg-yellow-500 font-semibold px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Confirm Selection ({selectedIndices.length}/4)
+        Confirm Selection ({selectedIndices.length}/8)
       </Button>
+
+      <AnimatePresence>
+        {previewIndex !== null && (
+          <motion.div
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="relative bg-black rounded-2xl overflow-hidden max-w-3xl w-full border p-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2  bg-yellow-300 rounded-full hover:bg-red-400"
+                onClick={() => setPreviewIndex(null)}
+              >
+                <X size={28} />
+              </Button>
+
+              <img
+                src={URL.createObjectURL(photoBlobs[previewIndex])}
+                alt={`preview-${previewIndex + 1}`}
+                className="w-full h-auto max-h-[80vh] object-contain rounded-lg mb-4 border-yellow-400"
+              />
+
+              <div className="w-full flex justify-center  items-center text-yellow-300">
+                <Button
+                  onClick={() => {
+                    toggleImageSelection(previewIndex);
+                    setPreviewIndex(null);
+                  }}
+                  className={`rounded-full px-6 py-2 font-semibold ${
+                    selectedIndices.includes(previewIndex)
+                      ? "bg-yellow-700 text-white hover:bg-yellow-800"
+                      : "bg-yellow-400 text-black hover:bg-yellow-500"
+                  }`}
+                >
+                  {selectedIndices.includes(previewIndex)
+                    ? "Remove from Selection"
+                    : "Select Image"}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

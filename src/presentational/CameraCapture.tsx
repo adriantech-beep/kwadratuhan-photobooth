@@ -32,6 +32,12 @@ const CameraCapture = () => {
   const { photoBlobs, clearPhotos, photoPreviews, selectionConfirmed } =
     usePhotoStore();
 
+  useEffect(() => {
+    console.log("photoBlobs:", photoBlobs);
+    // console.log("selectedPhotoBlobs:", selectedPhotoBlobs);
+    console.log("selectionConfirmed:", selectionConfirmed);
+  }, [photoBlobs, selectionConfirmed]);
+
   const {
     isVideoOn,
     setIsVideoOn,
@@ -57,6 +63,7 @@ const CameraCapture = () => {
     setIsCapturing,
     isProcessing,
     setIsProcessing,
+    resetCameraState,
   } = useCameraStore();
 
   const clearAllTimeouts = () => {
@@ -86,7 +93,6 @@ const CameraCapture = () => {
     setCountdown(null);
   };
 
-  /** COUNTDOWN **/
   const startCountdown = (duration: number, onEnd: () => void) => {
     let count = duration;
     isCountdownActiveRef.current = true;
@@ -153,9 +159,10 @@ const CameraCapture = () => {
   const handleRetake = async () => {
     stopCamera();
     clearPhotos();
-    setIsEditing(false);
-    const timeoutId = setTimeout(() => startBoothSession(), 100);
-    timeoutIdsRef.current.push(timeoutId);
+    resetCameraState();
+    isSessionActiveRef.current = false;
+
+    setTimeout(() => startBoothSession(), 100);
   };
 
   const handleEditPhotos = () => {
@@ -274,14 +281,13 @@ const CameraCapture = () => {
 
       <div className="flex flex-col justify-center gap-3 md:gap-4 mt-4">
         {isPreviewMode && !isVideoOn && photoBlobs.length === 0 && (
-          <>
+          <div className="h-[280px] flex flex-col items-center gap-2">
             <Button
               onClick={() => startBoothSession()}
               variant="outline"
               className="rounded-full border-4 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black w-24 h-24 md:w-32 md:h-32 flex flex-col items-center justify-center text-base md:text-lg font-semibold transition-all duration-300 bg-transparent"
             >
               <Camera size={16} className="md:size-20" />
-              Start Capture
             </Button>
             <div className="relative">
               <Button
@@ -332,7 +338,7 @@ const CameraCapture = () => {
             >
               <FlipHorizontal size={18} /> Flip
             </Button>
-          </>
+          </div>
         )}
 
         {isVideoOn && !isPreviewMode && photoBlobs.length >= 1 && (
@@ -348,11 +354,11 @@ const CameraCapture = () => {
         )}
 
         {!isVideoOn && photoBlobs.length > 0 && (
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
+          <div className="flex flex-col  items-center justify-center gap-4 mt-6">
             <Button
-              disabled={photoBlobs.length < 4}
+              disabled={photoBlobs.length < 8}
               onClick={handleEditPhotos}
-              className="rounded-full bg-yellow-400 text-black font-semibold px-8 py-3 text-base md:text-lg shadow-md hover:bg-yellow-500 hover:shadow-lg focus:ring-2 focus:ring-yellow-300 transition-all duration-200"
+              className="rounded-full bg-yellow-400 text-black font-semibold px-4 py-19 text-base md:text-lg shadow-md hover:bg-yellow-500 hover:shadow-lg focus:ring-2 focus:ring-yellow-300 transition-all duration-200"
             >
               Edit & Continue
             </Button>

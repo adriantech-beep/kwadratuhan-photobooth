@@ -27,11 +27,11 @@ const SilentProcessor = ({
 
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        console.log("[v0] Silent processing complete");
+        console.log("Silent processing complete");
 
         onProcessingComplete(uploadedUrls);
       } catch (error) {
-        console.error("[v0] Silent processing failed:", error);
+        console.error("Silent processing failed:", error);
         onProcessingComplete(uploadedUrls);
       }
     };

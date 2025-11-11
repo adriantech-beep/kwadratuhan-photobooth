@@ -41,6 +41,7 @@ export const layoutC_Assorted9 = `
      inkscape:label="Image"
      id="g1">
     <image
+     preserveAspectRatio="none"
        style="fill:#ff0000"
        id="photo-1"
        width="168.40363"
@@ -48,6 +49,7 @@ export const layoutC_Assorted9 = `
        x="11.92238"
        y="42.47348" />
     <image
+     preserveAspectRatio="none"
        style="fill:#ff0000"
        id="photo-2"
        width="168.40363"
@@ -55,6 +57,7 @@ export const layoutC_Assorted9 = `
        x="11.92238"
        y="156.48125" />
     <image
+     preserveAspectRatio="none"
        style="fill:#ff0000"
        id="photo-3"
        width="169.89392"
@@ -62,6 +65,7 @@ export const layoutC_Assorted9 = `
        x="11.92238"
        y="271.23416" />
     <image
+     preserveAspectRatio="none"
        style="fill:#ff0000"
        id="photo-4"
        width="167.65848"

@@ -1,0 +1,74 @@
+import QRDownloadImages from "@/components/QRDownloadImages";
+import { useCameraStore } from "@/store/useCameraStore";
+import { usePhotoStore } from "@/store/usePhotoStore";
+import { useLocation, useNavigate } from "react-router-dom";
+
+const FinalTemplate = () => {
+  const { state } = useLocation();
+  const layout: string = state?.layout || "";
+  const navigate = useNavigate();
+  const { clearPhotos } = usePhotoStore();
+  const { resetCameraState } = useCameraStore();
+  const finalImageUrl = state?.finalImageUrl;
+
+  if (!layout) {
+    return (
+      <p className="text-center mt-10 text-yellow-400">
+        ⚠️ No layout selected.
+      </p>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-black">
+      <div className="w-full max-w-6xl bg-zinc-900 rounded-2xl shadow-xl p-8 grid grid-cols-1 md:grid-cols-2 gap-8 border border-yellow-500">
+        <div className="flex items-center justify-center bg-black rounded-lg border-2 border-yellow-500 shadow-inner p-4">
+          <img
+            src={finalImageUrl}
+            alt="Final photo"
+            className="rounded-lg shadow-lg border-2 border-yellow-500"
+          />
+        </div>
+
+        <div className="flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-yellow-400">
+              Download Your Photos
+            </h2>
+          </div>
+
+          <div className="flex flex-col items-center justify-center gap-3">
+            <div className="bg-black p-4 rounded-lg shadow-lg border-2 border-yellow-500">
+              <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=example"
+                alt="QR Code"
+                className="w-40 h-40"
+              />
+            </div>
+            <p className="text-yellow-200 text-sm text-center">
+              Scan this QR code to get your digital photos.
+            </p>
+          </div>
+
+          <QRDownloadImages />
+
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={() => {
+                clearPhotos();
+                resetCameraState();
+
+                navigate("/");
+              }}
+              className="px-6 py-3 rounded-lg font-semibold bg-yellow-500 text-black hover:bg-yellow-400 transition"
+            >
+              Checkout →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FinalTemplate;
