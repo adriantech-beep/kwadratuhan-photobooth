@@ -4,7 +4,7 @@ import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import SilentProcessor from "./SilentProcess";
 import { usePhotoStore } from "@/store/usePhotoStore";
 import Lottie from "lottie-react";
-import bearAnim from "@/assets/Cute bear dancing.json";
+import cameraAnimation from "@/assets/Image Icon Tadah!.json";
 
 interface UploadImageProps {
   autoStartUpload?: boolean;
@@ -20,13 +20,6 @@ const UploadImage = ({ autoStartUpload = false }: UploadImageProps) => {
   const { selectedPhotoBlobs } = usePhotoStore();
   const sessionId = `session_${Date.now()}`;
   const navigate = useNavigate();
-
-  // const handleProcessingComplete = useCallback(() => {
-  //   navigate("/template-picker");
-  //   setStage("done");
-  // }, [navigate]);
-
-  // setSessionId(sessionId);
 
   useEffect(() => {
     if (
@@ -45,10 +38,6 @@ const UploadImage = ({ autoStartUpload = false }: UploadImageProps) => {
         for (let i = 0; i < selectedPhotoBlobs.length; i++) {
           const blob = selectedPhotoBlobs[i];
           const url = await uploadToCloudinary(blob);
-          // const url = await uploadToCloudinary(
-          //   blob,
-          //   `photobooth/${sessionId}/originals`
-          // );
 
           uploadResults.push(url);
         }
@@ -66,7 +55,11 @@ const UploadImage = ({ autoStartUpload = false }: UploadImageProps) => {
     <section className="flex flex-col items-center justify-center min-h-screen text-center bg-black">
       {stage === "upload" && (
         <div>
-          <Lottie animationData={bearAnim} loop={true} className="w-48 h-48" />
+          <Lottie
+            animationData={cameraAnimation}
+            loop={true}
+            className="w-48 h-48"
+          />
           <p className="text-yellow-300">Uploading images...</p>
         </div>
       )}

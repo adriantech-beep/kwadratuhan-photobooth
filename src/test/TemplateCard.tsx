@@ -35,27 +35,6 @@ export default function TemplateCard({
       >
         {name}
       </div>
-      {/* 
-      {selected && (
-        <div className="absolute inset-0 bg-yellow-500/10 flex items-center justify-center">
-          <div className="rounded-full bg-white p-2 shadow-lg">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-yellow-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={3}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 }

@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { QrCode, Banknote, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Lottie from "lottie-react";
+import qrScan from "@/assets/QR Scan Successful.json";
+import insertBill from "@/assets/Withdraw Money.json";
 
 export default function PaymentOption() {
   const [selected, setSelected] = useState<"cash" | "qr" | null>(null);
@@ -30,20 +33,24 @@ export default function PaymentOption() {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => handleSelect("cash")}
-          className="flex flex-col items-center justify-center border-2 border-yellow-400 bg-neutral-900 rounded-xl p-10 cursor-pointer transition-colors hover:bg-neutral-800"
+          className="flex flex-col items-center justify-center border-2 border-yellow-400 bg-yellow-400 rounded-xl p-10 cursor-pointer transition-colors hover:bg-neutral-800"
         >
-          <Banknote size={72} className="text-yellow-400 mb-4" />
-          <span className="text-xl">Insert Cash</span>
+          <Lottie
+            animationData={insertBill}
+            loop={true}
+            className="w-48 h-48"
+          />
+          <span className="text-xl text-white">Insert Cash</span>
         </motion.div>
 
         <motion.div
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => handleSelect("qr")}
-          className="flex flex-col items-center justify-center border-2 border-yellow-400 bg-neutral-900 rounded-xl p-10 cursor-pointer transition-colors hover:bg-neutral-800"
+          className="flex flex-col items-center justify-center border-2 border-yellow-400 bg-yellow-400 rounded-xl p-10 cursor-pointer transition-colors hover:bg-neutral-800"
         >
-          <QrCode size={72} className="text-yellow-400 mb-4" />
-          <span className="text-xl">Pay via QR</span>
+          <Lottie animationData={qrScan} loop={true} className="w-48 h-48" />
+          <span className="text-xl text-white">Pay via QR</span>
         </motion.div>
       </div>
 
