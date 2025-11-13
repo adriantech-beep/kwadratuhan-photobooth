@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import SelectorImage from "./SelectorImage-V2";
+import SelectorImage from "./SelectorImage";
 import UploadImage from "./UploadImage";
 import { usePhotoStore } from "@/store/usePhotoStore";
 import { useCameraStore } from "@/store/useCameraStore";
