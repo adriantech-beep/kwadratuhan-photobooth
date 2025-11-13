@@ -176,7 +176,7 @@ export default function TemplatePicker() {
   };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center">
+    <div className="h-screen flex flex-col items-center justify-center">
       <div className="w-full bg-gray-100 rounded-2xl shadow-xl p-6 flex flex-col gap-6">
         <div className="flex justify-between items-center border-b pb-4">
           <h1 className="text-2xl font-bold text-gray-800">

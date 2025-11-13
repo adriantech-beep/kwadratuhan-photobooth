@@ -1,4 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
+import Lottie from "lottie-react";
+import cameraAnimation2 from "@/assets/Camera Click.json";
 
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => (
   <AnimatePresence>
@@ -10,15 +12,13 @@ const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => (
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <motion.div
-          className="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full"
-          animate={{ rotate: 360 }}
-          transition={{
-            repeat: Infinity,
-            ease: "linear",
-            duration: 1,
-          }}
-        />
+        <div>
+          <Lottie
+            animationData={cameraAnimation2}
+            loop={true}
+            className="w-48 h-48"
+          />
+        </div>
       </motion.div>
     )}
   </AnimatePresence>

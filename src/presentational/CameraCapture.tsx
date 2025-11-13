@@ -12,11 +12,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import SelectorImage from "./SelectorImage";
 import UploadImage from "./UploadImage";
-import LoadingThreeDotsJumping from "@/components/LoadingThreeDotsJumping";
 import { usePhotoStore } from "@/store/usePhotoStore";
 import { useCameraStore } from "@/store/useCameraStore";
 import { capturePhoto } from "@/utils/capturePhoto";
 import { startCamera } from "@/utils/startCamera";
+import Lottie from "lottie-react";
+import cameraAnimation from "@/assets/Image Icon Tadah!.json";
 
 const CameraCapture = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -209,7 +210,11 @@ const CameraCapture = () => {
         animate={{ opacity: 1 }}
         className="flex flex-col items-center justify-center h-screen bg-black text-yellow-400 text-2xl font-semibold"
       >
-        Processing your photos <LoadingThreeDotsJumping />
+        <Lottie
+          animationData={cameraAnimation}
+          loop={true}
+          className="w-48 h-48"
+        />
       </motion.div>
     );
   }
